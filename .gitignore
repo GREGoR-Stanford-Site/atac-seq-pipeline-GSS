@@ -6,7 +6,7 @@ __pycache__/
 # GSS Wrapper Edition
 #   Ignore all directories inside gss_wrapper except for jupyter notebooks
 gss_wrapper/*/
-!gss_wrapper/jupyter/
+!gss_wrapper/jupyter_notebooks
 
 # Ignore all .txt files inside of gss_wrapper
 gss_wrapper/*.txt

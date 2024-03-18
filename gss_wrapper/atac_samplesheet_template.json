@@ -1,0 +1,20 @@
+{
+    "atac.pipeline_type" : "{{ pipeline_type }}",
+    "atac.genome_tsv" : "{{ genome_tsv }}",
+    "atac.fastqs_rep1_R1" : [
+        "{{ fastq_rep1_R1 }}"
+    ],
+    "atac.fastqs_rep1_R2" : [
+        "{{ fastq_rep1_R2 }}"
+    ],
+    "atac.paired_end" : {{ paired_end }},
+    "atac.auto_detect_adapter" : {{ auto_detect_adapter }},
+    "atac.enable_xcor" : {{ enable_xcor }},
+    "atac.title" : "{{ title }}",
+    "atac.description" : "{{ description }}",
+    "atac.align_cpu" : {{ align_cpu }},
+    "atac.align_mem_factor" : {{ align_mem_factor }},
+    "atac.filter_cpu" : {{ filter_cpu }},
+    "atac.filter_mem_factor" : {{ filter_mem_factor }}
+}
+

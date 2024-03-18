@@ -90,8 +90,12 @@ def bowtie2_pe(fastq1, fastq2, ref_index_prefix,
     prefix = os.path.join(out_dir, basename)
     tmp_bam = '{}.bam'.format(prefix)
 
+    # Adapted for GSS
+    gss_id = 'GSS'+basename.split('GSS')[1][0:6]
+
     run_shell_cmd(
         'bowtie2 {multimapping} -X2000 {mode_param} --mm --threads {nth} -x {ref} '
+        '--rg-id rg1 --rg SM:{gss_id} ' # Adapted for GSS
         '-1 {fastq1} -2 {fastq2} | samtools view -1 -S /dev/stdin > {tmp_bam}'.format(
             multimapping='-k {mm}'.format(mm=multimapping + 1) if multimapping else '',
             mode_param='--local ' if local else '',

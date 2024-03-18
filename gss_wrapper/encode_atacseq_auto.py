@@ -184,9 +184,9 @@ def main():
 	demux_samplesheet_path = '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv'
 	atac_samplesheet_template = 'atac_samplesheet_template.json'
 	fastqs_dir = '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1'
-	encode_repo = './atac-seq-pipeline'
+	encode_repo = '..'
 	atac_wdl = encode_repo+"/atac_no_docker.wdl" #Needs to be inside of cloned ENCODE repo: atac-seq-pipeline 
-	workdirs = os.path.join(pwd, "gss_atac_persample_workdirs_2_16_24")
+	workdirs = os.path.join(pwd, "gss_atac_persample_workdirs_testing")
 	# END OF SETTINGS
 
 	print(f" ~ Running in {workdirs.split('/')[-1]}")
@@ -213,6 +213,8 @@ def main():
 
 	if not os.path.isdir(workdirs):
 		os.makedirs(workdirs)
+	if not os.path.isdir(atac_run_summary_dir):
+		os.makedirs(atac_run_summary_dir)
 
 	skip_ids = []
 	for gss_id in gss_ids: 
@@ -255,9 +257,10 @@ def main():
 	print(f"Samples to be submitted: {len(gss_ids)}")
 
 	# Execution
-
+	i = 0
 	submissions_metadata = {gss_id:[] for gss_id in gss_ids}
 	for gss_id in gss_ids:
+		i+=1
 
 		gss_id_work_dir = os.path.join(workdirs, gss_id)
 
