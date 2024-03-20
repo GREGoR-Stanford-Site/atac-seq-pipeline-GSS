@@ -67,8 +67,11 @@ def bowtie2_se(fastq, ref_index_prefix,
     prefix = os.path.join(out_dir, basename)
     tmp_bam = '{}.bam'.format(prefix)
 
+    # Adapted for GSS
+    gss_id = 'GSS'+basename.split('GSS')[1][0:6]
+
     run_shell_cmd(
-        'bowtie2 {multimapping} {mode_param} --mm --threads {nth} -x {ref} '
+        'bowtie2 {multimapping} {mode_param} --mm --threads {nth} -x {ref} --rg-id rg1 --rg SM:{gss_id} '
         '-U {fastq} | samtools view -1 -S /dev/stdin > {tmp_bam}'.format(
             multimapping='-k {mm}'.format(mm=multimapping + 1) if multimapping else '',
             mode_param='--local ' if local else '',
@@ -76,6 +79,7 @@ def bowtie2_se(fastq, ref_index_prefix,
             ref=ref_index_prefix,
             fastq=fastq,
             tmp_bam=tmp_bam,
+            gss_id=gss_id
         )
     )
     bam = samtools_sort(tmp_bam, nth, mem_gb, out_dir)
@@ -94,8 +98,7 @@ def bowtie2_pe(fastq1, fastq2, ref_index_prefix,
     gss_id = 'GSS'+basename.split('GSS')[1][0:6]
 
     run_shell_cmd(
-        'bowtie2 {multimapping} -X2000 {mode_param} --mm --threads {nth} -x {ref} '
-        '--rg-id rg1 --rg SM:{gss_id} ' # Adapted for GSS
+        'bowtie2 {multimapping} -X2000 {mode_param} --mm --threads {nth} -x {ref} --rg-id rg1 --rg SM:{gss_id} '
         '-1 {fastq1} -2 {fastq2} | samtools view -1 -S /dev/stdin > {tmp_bam}'.format(
             multimapping='-k {mm}'.format(mm=multimapping + 1) if multimapping else '',
             mode_param='--local ' if local else '',
@@ -104,6 +107,7 @@ def bowtie2_pe(fastq1, fastq2, ref_index_prefix,
             fastq1=fastq1,
             fastq2=fastq2,
             tmp_bam=tmp_bam,
+            gss_id=gss_id
         )
     )
     bam = samtools_sort(tmp_bam, nth, mem_gb, out_dir)
@@ -164,7 +168,7 @@ def main():
     chk_bowtie2_index(bowtie2_index_prefix)
 
     # bowtie2
-    log.info('Running bowtie2...')
+    log.info('Running edited bowtie2...')
     if args.paired_end:
         bam = bowtie2_pe(
             args.fastqs[0], args.fastqs[1],
