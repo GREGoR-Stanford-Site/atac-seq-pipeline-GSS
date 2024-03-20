@@ -73,7 +73,7 @@ workflow atac {
     input {
         # group: runtime_environment
         String docker = 'encodedcc/atac-seq-pipeline:v2.2.2'
-        String singularity = 'https://encode-pipeline-singularity-image.s3.us-west-2.amazonaws.com/atac-seq-pipeline_v2.2.2.sif'
+        String singularity = '/oak/stanford/groups/smontgom/jolsen98/atac-seq-pipeline-GSS/testing/atac-seq-pipeline_v2.2.2.sif'
         String conda = 'encd-atac'
         String conda_macs2 = 'encd-atac-macs2'
         String conda_spp = 'encd-atac-spp'
@@ -1901,7 +1901,7 @@ task align {
 
         # align on trimmed/merged fastqs
         if [ '${aligner}' == 'bowtie2' ]; then
-            python3 $(which encode_task_bowtie2.py) \
+            python3 /mnt/src/encode_task_bowtie2.py \
                 ${idx_tar} \
                 R1/*.fastq.gz \
                 ${if paired_end then 'R2/*.fastq.gz' else ''} \
