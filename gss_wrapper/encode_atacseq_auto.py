@@ -4,23 +4,76 @@ import subprocess
 import shutil
 import time
 from jinja2 import Template
+import argparse
 
 # Run normally:
-	# python3 encode_atacseq_atuo.py 
+	# python3 encode_atacseq_auto.py \
+	# --run_title 'GSS ATACSEQ BATCH 1' \
+	# --workdirs_path './gss_atac_persample_workdirs_testing' \
+	# --demux_samplesheet_path '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv' \
+	# --fastqs_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' 
 
 # Run and overwrite specific IDs:
-	# python3 encode_atacseq_atuo.py GSS123456,GSS135790
+	# python3 encode_atacseq_atuo.py \
+	# --run_title 'GSS ATACSEQ BATCH 1' \
+	# --workdirs_path './gss_atac_persample_workdirs_testing' \
+	# --demux_samplesheet_path '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv' \
+	# --fastqs_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' \
+	# --overwrite_ids 'GSS1234567,GSS1234568'
 
-# ! Edit Settings section of main function !
+# Run with full overwrite:
+	# python3 encode_atacseq_atuo.py \
+	# --run_title 'GSS ATACSEQ BATCH 1' \
+	# --workdirs_path './gss_atac_persample_workdirs_testing' \
+	# --demux_samplesheet_path '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv' \
+	# --fastqs_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' \
+	# --full_overwrite True
 
-def check_atac_wdl_no_docker(encode_repo, atac_wdl):
-	#TODO: Consider always copying (what if changes are made to atac_no_docker.wdl)
-	if not os.path.exists(atac_wdl):
-		wdl_script = atac_wdl.split('/')[-1]
-		shutil.copy2(wdl_script, os.path.join(encode_repo, wdl_script))
-		print(f" ~ Copied {wdl_script} to {encode_repo}")
+def parse_args():
+	parser = argparse.ArgumentParser(prog = 'encode_atacseq_auto.py',
+		formatter_class = argparse.RawTextHelpFormatter, description = 
+		'\n'
+		'-Description:\n'
+		)
 
-	return 
+	parser.add_argument('--run_title', help = "Title/name for current run. Ie. 'GSS ATACSEQ BATCH 1'. Alphanumeric characters only" )
+	parser.add_argument('--workdirs_path', help =  "Path to directory for work dirs for each sample. This is where all work and outputs will be stored.\nExample: './gss_atacseq_workdirs_MM_DD_YY'")
+	parser.add_argument('--demux_samplesheet_path', help='Path to samplesheet used in the demultiplex process.')
+	parser.add_argument('--fastqs_dir', help='Path to directory containing all fastqs outputted from demultiplex')
+	parser.add_argument('--full_overwrite', help='Pass argument with True to overwrite all samples in specified workdir', required=False, default=False, choices = ['True', 'False'])
+	parser.add_argument('--overwrite_ids', help='Specific GSS IDs you would like to overwrite/rerun. Pass as GSS123456,GSS123457... [comma separated, no spaces]', required=False, default=[None])
+
+	args = parser.parse_args()
+
+	if args.full_overwrite == 'True':
+		args.full_overwrite = True
+
+	if any(not c.isalnum() for c in args.run_title if c != " "):
+		print("Error, --run_title string must not contain special characters")
+		raise Exception
+
+	if os.path.exists(args.demux_samplesheet_path) == False:
+		print(f"Error, demux_samplesheet_path: '{args.demux_samplesheet_path}' Does Not Exist")
+		raise Exception
+
+	if os.path.isdir(args.fastqs_dir) == False:
+		print(f"Error, fastqs_dir '{args.fastqs_dir}' Does Not Exist")
+		raise Exception
+
+	if args.overwrite_ids != [None] and args.overwrite_ids.split(" ") > 1:
+		print("Error, --overwrite_ids argument must not contain spaces")
+		raise Exception
+
+	return args
+
+# def check_atac_wdl_no_docker(encode_repo, atac_wdl):
+# 	#TODO: Consider always copying (what if changes are made to atac_no_docker.wdl)
+# 	if not os.path.exists(atac_wdl):
+# 		wdl_script = atac_wdl.split('/')[-1]
+# 		shutil.copy2(wdl_script, os.path.join(encode_repo, wdl_script))
+# 		print(f" ~ Copied {wdl_script} to {encode_repo}")
+
+# 	return 
 
 def prompt_yes_no(message):
     while True:
@@ -109,6 +162,8 @@ conda activate encode_env
 
 cd {gss_id_work_dir}
 
+export SINGULARITY_BIND="/oak/stanford/groups/smontgom/jolsen98/atac-seq-pipeline-GSS/src:/mnt/src"
+
 caper run atac.wdl -i {samplesheet_path} \
 --singularity https://encode-pipeline-singularity-image.s3.us-west-2.amazonaws.com/atac-seq-pipeline_v2.2.2.sif \
 --local-loc-dir ./local_loc_dir \
@@ -165,38 +220,18 @@ def write_submission_log_file(outpath, run_metadata):
 
 def main():
 
-	# args
-
-	# Can write as only cmdln argument GSSIDs you want overwritten. Example: 'python3 encode_atacseq_atuo.py GSS123456,GSS135790'
-	overwrite_ids = [None]
-	if len(sys.argv) > 1:
-		overwrite_ids = sys.argv[1]
-		overwrite_ids = overwrite_ids.split(',') 
-
-	# overwrite = False: resumes processing by default, does not overwrite samples that have finished
-	# overwrite = True: Everything is deleted and rerun
-	overwrite = False
-
-	pwd = os.getcwd()
-
-	# SET THESE EACH RUN (of 64 samples)
-	run_description = "GSS ATACSEQ BATCH 1"
-	demux_samplesheet_path = '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv'
-	atac_samplesheet_template = 'atac_samplesheet_template.json'
-	fastqs_dir = '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1'
-	encode_repo = '..'
-	atac_wdl = encode_repo+"/atac_no_docker.wdl" #Needs to be inside of cloned ENCODE repo: atac-seq-pipeline 
-	workdirs = os.path.join(pwd, "gss_atac_persample_workdirs_testing")
-	# END OF SETTINGS
-
-	print(f" ~ Running in {workdirs.split('/')[-1]}")
-
-	atac_run_summary_script = os.path.join(pwd, "send_run_summary.py")
-	atac_run_summary_dir = os.path.join(pwd, "atac_run_summaries")
-
+	# Parse args
+	args = parse_args()
+	run_title = args.run_title
+	workdirs = args.workdirs_path
+	demux_samplesheet_path = args.demux_samplesheet_path
+	fastqs_dir = args.fastqs_dir
+	overwrite = args.full_overwrite
+	overwrite_ids = args.overwrite_ids
+	if type(overwrite_ids) == str:
+		overwrite_ids = overwrite_ids.split(',')
 
 	# Overwrite control
-
 	if overwrite:
 		if prompt_yes_no(f"Overwrite = True\n\tAre you sure you want to overwrite everything in {workdirs.split('/')[-1]} ?"):
 			print("Continuing...")
@@ -204,12 +239,20 @@ def main():
 			print("Exiting...")
 			return
 
+	# Static Paths
+	pwd = os.getcwd()
+	atac_samplesheet_template = 'atac_samplesheet_template.json'
+	encode_repo = '..'
+	atac_wdl = encode_repo+"/atac_no_docker.wdl" #Needs to be inside of cloned ENCODE repo: atac-seq-pipeline
+	atac_run_summary_script = os.path.join(pwd, "send_run_summary.py") 
+	atac_run_summary_dir = os.path.join(pwd, "atac_run_summaries")
 
 	######## Setup #######
 
+	print(f" ~ Running in {workdirs.split('/')[-1]}")
 	gss_ids = get_fastq_GSS_IDs(demux_samplesheet_path)
 
-	check_atac_wdl_no_docker(encode_repo,atac_wdl)
+#	check_atac_wdl_no_docker(encode_repo,atac_wdl)
 
 	if not os.path.isdir(workdirs):
 		os.makedirs(workdirs)
@@ -250,17 +293,21 @@ def main():
 
 		# Make samplesheet
 		fastq_r1_path, fastq_r2_path = get_gss_atac_fastq_paths(fastqs_dir, gss_id)
-		generate_samplesheet(atac_samplesheet_template, gss_id_work_dir, fastq_r1_path, fastq_r2_path, samplesheet_title = gss_id, samplesheet_description=run_description)
+		generate_samplesheet(atac_samplesheet_template, gss_id_work_dir, fastq_r1_path, fastq_r2_path, samplesheet_title = gss_id, samplesheet_description=run_title)
 
 	gss_ids = [gss_id for gss_id in gss_ids if gss_id not in skip_ids]
 
 	print(f"Samples to be submitted: {len(gss_ids)}")
 
-	# Execution
+
+	######## Execution ########
+
 	i = 0
 	submissions_metadata = {gss_id:[] for gss_id in gss_ids}
 	for gss_id in gss_ids:
 		i+=1
+		if i == 3:
+			break
 
 		gss_id_work_dir = os.path.join(workdirs, gss_id)
 
