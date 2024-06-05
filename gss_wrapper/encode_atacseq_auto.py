@@ -11,14 +11,14 @@ import argparse
             # --run_title 'GSS ATACSEQ BATCH 1' \
             # --workdirs_path './gss_atac_persample_workdirs_testing' \
             # --demux_samplesheet_path '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv' \
-            # --fastqs_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' 
+            # --data_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' 
 
 # Run and overwrite specific IDs:
     # python3 encode_atacseq_atuo.py \
             # --run_title 'GSS ATACSEQ BATCH 1' \
             # --workdirs_path './gss_atac_persample_workdirs_testing' \
             # --demux_samplesheet_path '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv' \
-            # --fastqs_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' \
+            # --data_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' \
             # --overwrite_ids 'GSS1234567,GSS1234568'
 
 # Run with full overwrite:
@@ -26,7 +26,7 @@ import argparse
             # --run_title 'GSS ATACSEQ BATCH 1' \
             # --workdirs_path './gss_atac_persample_workdirs_testing' \
             # --demux_samplesheet_path '/oak/stanford/groups/smontgom/gss_atacseq/testing/2024-01-31_full_demux_sample_sheet.csv' \
-            # --fastqs_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' \
+            # --data_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' \
             # --full_overwrite True
 
 def parse_args():
@@ -39,7 +39,8 @@ def parse_args():
     parser.add_argument('--run_title', help = "Title/name for current run. Ie. 'GSS ATACSEQ BATCH 1'. Alphanumeric characters only" )
     parser.add_argument('--workdirs_path', help =  "Path to directory for work dirs for each sample. This is where all work and outputs will be stored.\nExample: './gss_atacseq_workdirs_MM_DD_YY'")
     parser.add_argument('--demux_samplesheet_path', help='Path to samplesheet used in the demultiplex process.')
-    parser.add_argument('--fastqs_dir', help='Path to directory containing all fastqs outputted from demultiplex')
+    parser.add_argument('--data_dir', help='Path to directory containing either 1. all fastqs outputted from demultiplex or 2. a single raw bam file for each sample')
+    parser.add_argument('--genomic_start_format', help = 'data type of files in data_dir, ie, fastq or bam.' ,required = True, default = False, choices = ['fastq','bam'])
     parser.add_argument('--full_overwrite', help='Pass argument with True to overwrite all samples in specified workdir', required=False, default=False, choices = ['True', 'False'])
     parser.add_argument('--overwrite_ids', help='Specific GSS IDs you would like to overwrite/rerun. Pass as GSS123456,GSS123457... [comma separated, no spaces]', required=False, default=[None])
 
@@ -56,8 +57,8 @@ def parse_args():
         print(f"Error, demux_samplesheet_path: '{args.demux_samplesheet_path}' Does Not Exist")
         raise Exception
 
-    if os.path.isdir(args.fastqs_dir) == False:
-        print(f"Error, fastqs_dir '{args.fastqs_dir}' Does Not Exist")
+    if os.path.isdir(args.data_dir) == False:
+        print(f"Error, data_dir '{args.data_dir}' Does Not Exist")
         raise Exception
 
     if args.overwrite_ids != [None] and args.overwrite_ids.split(" ") > 1:
@@ -94,9 +95,12 @@ def get_fastq_GSS_IDs(demux_samplesheet_path):
                 ids.append(line[0:9])
     return ids
 
-def generate_samplesheet(template_path, gss_id_work_dir, fastq_r1_path, fastq_r2_path, samplesheet_title, samplesheet_description):
-
+def generate_samplesheet(template_base_path, gss_id_work_dir, genomic_file_type, file_dict, samplesheet_title, samplesheet_description):
+    template_path = template_base_path.format(genomic_file_type.lower()) 
     samplesheet_outpath = gss_id_work_dir+'/atac_samplesheet.json'
+    
+    bam_data = None
+    fastq_data = None    
 
     template_content = None
     with open(template_path, "r") as f:
@@ -107,8 +111,6 @@ def generate_samplesheet(template_path, gss_id_work_dir, fastq_r1_path, fastq_r2
     data = {
             "pipeline_type": "atac",
             "genome_tsv": "https://storage.googleapis.com/encode-pipeline-genome-data/genome_tsv/v4/hg38.tsv",
-            "fastq_rep1_R1": f"{fastq_r1_path}",
-            "fastq_rep1_R2": f"{fastq_r2_path}",
             "paired_end": "true",
             "auto_detect_adapter": "true",
             "enable_xcor": "true",
@@ -119,6 +121,17 @@ def generate_samplesheet(template_path, gss_id_work_dir, fastq_r1_path, fastq_r2
             "filter_cpu": 6,
             "filter_mem_factor": 1.2
             }
+
+    if genomic_file_type.lower() == 'bam':
+        bam_data = {"bam": f"{file_dict['bam_path']}"}
+        data.update(bam_data)
+    
+    else:
+        fastq_data = {
+            "fastq_rep1_R1": f"{file_dict['fastq_r1_path']}",
+            "fastq_rep1_R2": f"{file_dict['fastq_r2_path']}"
+        }
+        data.update(fastq_data)
 
     rendered_template = template.render(data)
     with open(samplesheet_outpath, "w") as f:
@@ -136,6 +149,29 @@ def get_gss_atac_fastq_paths(fastqs_dir, gss_id):
     fastq_r2_path = os.path.join(fastqs_dir, fastq_r2)
 
     return fastq_r1_path, fastq_r2_path
+
+def get_gss_atac_paths(data_dir, gss_id, genomic_file_type):
+    file_dict = {'bam_path':None,'fastq_r1_path':None, 'fastq_r2_path':None}
+    if genomic_file_type.lower() == 'fastq':
+        fastqs = [item for item in os.listdir(data_dir) if gss_id in item and 'fastq' in item]
+        fastqs = [item for item in fastqs if 'L00' not in item]
+        fastq_r1 = [item for item in fastqs if '_1.' in item][0]
+        fastq_r2 = [item for item in fastqs if '_2.' in item][0]
+        fastq_r1_path = os.path.join(data_dir, fastq_r1)
+        fastq_r2_path = os.path.join(data_dir, fastq_r2)
+        file_dict['fastq_r2_path'] = fastq_r2_path 
+        file_dict['fastq_r1_path'] = fastq_r1_path
+    elif genomic_file_type.lower() == 'bam':
+        bam = [item for item in os.listdir(data_dir) if gss_id in item and 'bam' in item]
+        if bam == []:
+            return None
+        bam = bam[0]
+        bam_path = os.path.join(data_dir, bam)
+        file_dict['bam_path'] = bam_path
+    else:
+        raise Exception('Invalid genomic_data_type arg')
+
+    return file_dict
 
 
 def write_sbatch_script(gss_id, gss_id_work_dir, job_name, partition, atac_run_summary_dir, atac_run_summary_script):
@@ -225,7 +261,8 @@ def main():
     run_title = args.run_title
     workdirs = args.workdirs_path
     demux_samplesheet_path = args.demux_samplesheet_path
-    fastqs_dir = args.fastqs_dir
+    data_dir = args.data_dir
+    genomic_file_type = args.genomic_start_format
     overwrite = args.full_overwrite
     overwrite_ids = args.overwrite_ids
     if type(overwrite_ids) == str:
@@ -275,25 +312,30 @@ def main():
             continue
 
         #Given above conditions, a directory exists with a partially completed run or a run summary csv was manually deleted -> clear gssid for new run 
-        # Or this is the first time running in specified work directory
-    else:
-        if not os.path.exists(gss_id_work_dir):
-            print(f"Preparing first run for {gss_id}")
+            # Or this is the first time running in specified work directory
         else:
-            print(f"Overwritting incomplete run for {gss_id}")
-            if os.path.exists(run_summary_path):
-                os.remove(run_summary_path)
-            if os.path.exists(gss_id_work_dir):
-                shutil.rmtree(gss_id_work_dir)
+            if not os.path.exists(gss_id_work_dir):
+                print(f"Preparing first run for {gss_id}")
+            else:
+                print(f"Overwritting incomplete run for {gss_id}")
+                if os.path.exists(run_summary_path):
+                    os.remove(run_summary_path)
+                if os.path.exists(gss_id_work_dir):
+                    shutil.rmtree(gss_id_work_dir)
 
 
-        os.makedirs(gss_id_work_dir, exist_ok=True)
-        shutil.copy2(atac_wdl, os.path.join(gss_id_work_dir, "atac.wdl"))
-        shutil.copy2(atac_run_summary_script, os.path.join(gss_id_work_dir, "send_run_summary.py"))
+            os.makedirs(gss_id_work_dir, exist_ok=True)
+            shutil.copy2(atac_wdl, os.path.join(gss_id_work_dir, "atac.wdl"))
+            shutil.copy2(atac_run_summary_script, os.path.join(gss_id_work_dir, "send_run_summary.py"))
 
-        # Make samplesheet
-        fastq_r1_path, fastq_r2_path = get_gss_atac_fastq_paths(fastqs_dir, gss_id)
-        generate_samplesheet(atac_samplesheet_template, gss_id_work_dir, fastq_r1_path, fastq_r2_path, samplesheet_title = gss_id, samplesheet_description=run_title)
+            # Make samplesheet
+            file_dict = get_gss_atac_paths(data_dir, gss_id, genomic_file_type)
+            if not file_dict:
+                print(f"No matching data file found for id {gss_id}, skipping")
+                skip_ids.append(gss_id)
+                continue
+            #fastq_r1_path, fastq_r2_path = get_gss_atac_fastq_paths(fastqs_dir, gss_id)
+            generate_samplesheet(atac_samplesheet_template, gss_id_work_dir, genomic_file_type = genomic_file_type, file_dict = file_dict,  samplesheet_title = gss_id, samplesheet_description=run_title)
 
     gss_ids = [gss_id for gss_id in gss_ids if gss_id not in skip_ids]
 
