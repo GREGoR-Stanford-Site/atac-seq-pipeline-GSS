@@ -189,7 +189,7 @@ def write_sbatch_script(gss_id, gss_id_work_dir, job_name, partition, atac_run_s
 #SBATCH --cpus-per-task=2
 #SBATCH --partition={partition}
 #SBATCH --account=smontgom
-#SBATCH --time=48:00:00
+#SBATCH --time=72:00:00
 #SBATCH --mem-per-cpu=6G
 
 
