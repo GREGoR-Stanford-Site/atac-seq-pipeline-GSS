@@ -29,6 +29,10 @@ import argparse
             # --data_dir '/oak/stanford/groups/smontgom/gss_atacseq/testing/run1_full_output_NoLaneSplitting/240119_A00509_0854_AHNM2CDMXY/GSS_ATACSEQ_RUN1' \
             # --full_overwrite True
 
+
+# TODO:
+    # Shouldn't be required to provide fastqs dir if running with merged bam  (merged_bam_id flag)
+
 def parse_args():
     parser = argparse.ArgumentParser(prog = 'encode_atacseq_auto.py',
                                      formatter_class = argparse.RawTextHelpFormatter, description = 
@@ -43,6 +47,7 @@ def parse_args():
     parser.add_argument('--genomic_start_format', help = 'data type of files in data_dir, ie, fastq or bam.' ,required = True, default = False, choices = ['fastq','bam'])
     parser.add_argument('--full_overwrite', help='Pass argument with True to overwrite all samples in specified workdir', required=False, default=False, choices = ['True', 'False'])
     parser.add_argument('--overwrite_ids', help='Specific GSS IDs you would like to overwrite/rerun. Pass as GSS123456,GSS123457... [comma separated, no spaces]', required=False, default=[None])
+    parser.add_argument('--merged_bam_id', help = 'Add this argument if running pipeline with single merged BAM. Provide unique identifer as argument that exists in the filename of the merged bam', required=False,default=None)
 
     args = parser.parse_args()
 
@@ -63,6 +68,10 @@ def parse_args():
 
     if args.overwrite_ids != [None] and args.overwrite_ids.split(" ") > 1:
         print("Error, --overwrite_ids argument must not contain spaces")
+        raise Exception
+
+    if args.genomic_start_format == 'fastq' and args.merged_bam_id != None:
+        print("Cannot pass genomic start type as fastq and provide merged_bam_id")
         raise Exception
 
     return args
@@ -263,6 +272,7 @@ def main():
     demux_samplesheet_path = args.demux_samplesheet_path
     data_dir = args.data_dir
     genomic_file_type = args.genomic_start_format
+    merged_bam_id = args.merged_bam_id
     overwrite = args.full_overwrite
     overwrite_ids = args.overwrite_ids
     if type(overwrite_ids) == str:
@@ -287,7 +297,10 @@ def main():
     ######## Setup #######
 
     print(f" ~ Running in {workdirs.split('/')[-1]}")
-    gss_ids = get_fastq_GSS_IDs(demux_samplesheet_path)
+    if merged_bam_id:
+        gss_ids = [merged_bam_id]
+    else:
+        gss_ids = get_fastq_GSS_IDs(demux_samplesheet_path)
 
 #	check_atac_wdl_no_docker(encode_repo,atac_wdl)
 
@@ -363,7 +376,7 @@ def main():
         time.sleep(30) if i%10==0 else time.sleep(2)
 
         submissions_metadata[gss_id] = [f"\tjob_name: {job_name}", f"\tjob_id: {batch_job_id}", f"\tpartition: {partition}", f"\tdirectory: {gss_id_work_dir}"]
-
+  
     log_outpath = "./sbatch_submission_log.txt"
     write_submission_log_file(log_outpath, submissions_metadata)
 
