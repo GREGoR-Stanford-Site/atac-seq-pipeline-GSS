@@ -288,7 +288,7 @@ def main():
 
     # Static Paths
     pwd = os.getcwd()
-    atac_samplesheet_template = 'atac_samplesheet_template.json'
+    atac_samplesheet_template = 'atac_samplesheet_template_{}.json'.format(genomic_file_type)
     encode_repo = '..'
     atac_wdl = encode_repo+"/atac_no_docker.wdl" #Needs to be inside of cloned ENCODE repo: atac-seq-pipeline
     atac_run_summary_script = os.path.join(pwd, "send_run_summary.py") 
