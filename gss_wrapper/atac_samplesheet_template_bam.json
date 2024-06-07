@@ -1,7 +1,9 @@
 {
     "atac.pipeline_type" : "{{ pipeline_type }}",
     "atac.genome_tsv" : "{{ genome_tsv }}",
-    "atac.bams" : "{{ bam }}",
+    "atac.bams" : [
+        "{{ bam }}"
+    ],
     "atac.paired_end" : {{ paired_end }},
     "atac.auto_detect_adapter" : {{ auto_detect_adapter }},
     "atac.enable_xcor" : {{ enable_xcor }},
@@ -12,4 +14,3 @@
     "atac.filter_cpu" : {{ filter_cpu }},
     "atac.filter_mem_factor" : {{ filter_mem_factor }}
 }
-
