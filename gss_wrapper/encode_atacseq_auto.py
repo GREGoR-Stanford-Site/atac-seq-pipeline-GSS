@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('--data_dir', help='Path to directory containing either 1) all fastqs outputted from demultiplex or 2)  a single raw bam file for each sample')
     parser.add_argument('--genomic_start_format', help = 'data type of files in data_dir, ie, fastq or bam.' ,required = True, default = False, choices = ['fastq','bam'])
     parser.add_argument('--full_overwrite', help='Pass argument with True to overwrite all samples in specified workdir', required=False, default=False, choices = ['True', 'False'])
-    parser.add_argument('--overwrite_ids', help='Specific GSS IDs you would like to overwrite/rerun. Pass as GSS123456,GSS123457... [comma separated, no spaces]', required=False, default=[None])
+    parser.add_argument('--overwrite_ids', help='Specific GSS IDs you would like to overwrite/rerun. Only these IDs will be run. Pass as GSS123456,GSS123457... [comma separated, no spaces]', required=False, default=[None])
     parser.add_argument('--merged_bam_id', help = 'Add this argument if running pipeline with single merged BAM. Provide unique identifer as argument that exists in the filename of the merged bam', required=False,default=None)
 
     args = parser.parse_args()
