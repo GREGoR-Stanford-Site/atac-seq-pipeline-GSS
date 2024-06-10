@@ -43,7 +43,7 @@ def parse_args():
     parser.add_argument('--run_title', help = "Title/name for current run. Ie. 'GSS ATACSEQ BATCH 1'. Alphanumeric characters only" )
     parser.add_argument('--workdirs_path', help =  "Path to directory for work dirs for each sample. This is where all work and outputs will be stored.\nExample: './gss_atacseq_workdirs_MM_DD_YY'")
     parser.add_argument('--demux_samplesheet_path', help='Path to samplesheet used in the demultiplex process.')
-    parser.add_argument('--data_dir', help='Path to directory containing either 1. all fastqs outputted from demultiplex or 2. a single raw bam file for each sample')
+    parser.add_argument('--data_dir', help='Path to directory containing either 1) all fastqs outputted from demultiplex or 2)  a single raw bam file for each sample')
     parser.add_argument('--genomic_start_format', help = 'data type of files in data_dir, ie, fastq or bam.' ,required = True, default = False, choices = ['fastq','bam'])
     parser.add_argument('--full_overwrite', help='Pass argument with True to overwrite all samples in specified workdir', required=False, default=False, choices = ['True', 'False'])
     parser.add_argument('--overwrite_ids', help='Specific GSS IDs you would like to overwrite/rerun. Pass as GSS123456,GSS123457... [comma separated, no spaces]', required=False, default=[None])
@@ -66,7 +66,7 @@ def parse_args():
         print(f"Error, data_dir '{args.data_dir}' Does Not Exist")
         raise Exception
 
-    if args.overwrite_ids != [None] and args.overwrite_ids.split(" ") > 1:
+    if args.overwrite_ids != [None] and len(args.overwrite_ids.split(" ")) > 1:
         print("Error, --overwrite_ids argument must not contain spaces")
         raise Exception
 
@@ -299,6 +299,8 @@ def main():
     print(f" ~ Running in {workdirs.split('/')[-1]}")
     if merged_bam_id:
         gss_ids = [merged_bam_id]
+    elif overwrite_ids:
+        gss_ids = overwrite_ids
     else:
         gss_ids = get_fastq_GSS_IDs(demux_samplesheet_path)
 
@@ -337,18 +339,18 @@ def main():
                     shutil.rmtree(gss_id_work_dir)
 
 
-            os.makedirs(gss_id_work_dir, exist_ok=True)
-            shutil.copy2(atac_wdl, os.path.join(gss_id_work_dir, "atac.wdl"))
-            shutil.copy2(atac_run_summary_script, os.path.join(gss_id_work_dir, "send_run_summary.py"))
+        os.makedirs(gss_id_work_dir, exist_ok=True)
+        shutil.copy2(atac_wdl, os.path.join(gss_id_work_dir, "atac.wdl"))
+        shutil.copy2(atac_run_summary_script, os.path.join(gss_id_work_dir, "send_run_summary.py"))
 
-            # Make samplesheet
-            file_dict = get_gss_atac_paths(data_dir, gss_id, genomic_file_type)
-            if not file_dict:
-                print(f"No matching data file found for id {gss_id}, skipping")
-                skip_ids.append(gss_id)
-                continue
-            #fastq_r1_path, fastq_r2_path = get_gss_atac_fastq_paths(fastqs_dir, gss_id)
-            generate_samplesheet(atac_samplesheet_template, gss_id_work_dir, genomic_file_type = genomic_file_type, file_dict = file_dict,  samplesheet_title = gss_id, samplesheet_description=run_title)
+        # Make samplesheet
+        file_dict = get_gss_atac_paths(data_dir, gss_id, genomic_file_type)
+        if not file_dict:
+            print(f"No matching data file found for id {gss_id}, skipping")
+            skip_ids.append(gss_id)
+            continue
+        #fastq_r1_path, fastq_r2_path = get_gss_atac_fastq_paths(fastqs_dir, gss_id)
+        generate_samplesheet(atac_samplesheet_template, gss_id_work_dir, genomic_file_type = genomic_file_type, file_dict = file_dict,  samplesheet_title = gss_id, samplesheet_description=run_title)
 
     gss_ids = [gss_id for gss_id in gss_ids if gss_id not in skip_ids]
 
