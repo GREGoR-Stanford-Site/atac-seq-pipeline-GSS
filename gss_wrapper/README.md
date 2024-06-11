@@ -62,7 +62,7 @@ nextflow run https://github.com/JamWithBread/nf_demultiplex \
    **Clean Directory Structure:**
 ```bash
 GSS_RUN1_encode_atacseq
-	├── align_stats.sh
+	├── align_stats2.sh
 	├── atac_no_docker.wdl 
 	├── atac_samplesheet_template.json
 	├── atac-seq-pipeline -> from ENCODE
@@ -83,7 +83,7 @@ GSS_RUN1_encode_atacseq
   ```
 - Run alignment stats.
   ```
-  bash ./align_stats.sh gss_atac_persample_workdirs_2_16_24 64
+  bash ./align_stats2.sh gss_atac_persample_workdirs_2_16_24 64
   ```
 - Run `get_html_qcs.py`. Puts all QC HTMLs in one place
   ```
@@ -103,7 +103,7 @@ GSS_RUN1_encode_atacseq
   **After All is Said and Done:**
 ```bash
 GSS_RUN1_encode_atacseq
-	├── align_stats.sh
+	├── align_stats2.sh
 	├── atac_no_docker.wdl
 	├── atac_run_summaries 
 	│ 	└── (64 run summaries)
