@@ -1,7 +1,7 @@
 {
     "atac.pipeline_type" : "{{ pipeline_type }}",
     "atac.genome_tsv" : "{{ genome_tsv }}",
-    "atac.bams" : [
+    "atac.nodup_bams" : [
         "{{ bam }}"
     ],
     "atac.paired_end" : {{ paired_end }},
