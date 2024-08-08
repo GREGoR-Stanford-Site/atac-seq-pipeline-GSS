@@ -53,10 +53,11 @@ nextflow run https://github.com/JamWithBread/nf_demultiplex \
 ### 4. Run ENCODE ATAC-Seq Pipeline & QC.
 1. **Create New Directory and Setup Paths**
    
-   - Clone this repo; [GSS_ATAC-Seq](https://github.com/GREGoR-Stanford-Site/GSS_ATAC-Seq)
-   - Rename folder of cloned repo to something indicating current gss atac run, ie GSS_RUN1_encode_atacseq
-   - cd GSS_RUN1_encode_atacseq
-   - Clone the [Encode ATAC-seq pipeline](https://github.com/ENCODE-DCC/atac-seq-pipeline).
+   - Create directory named after your atac-seq project, ie ie GSS_BATCH1_encode_atacseq
+   - Clone this repo;
+   - 	```
+      	git clone git@github.com:GREGoR-Stanford-Site/atac-seq-pipeline-GSS.git
+        ```
    - Setup paths in `encode_atacseq_auto.py`.
 
    **Clean Directory Structure:**
