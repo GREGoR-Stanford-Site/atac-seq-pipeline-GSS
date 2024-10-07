@@ -2,6 +2,8 @@
 
 # To run: 'bash ./alignstats.sh <Directory> <Cores>'
 
+# NOTE: Make sure you run this in an environment where mosdepth is installed
+
 module load samtools
 workdirs=$1 #./gss_atac_persample_workdirs
 cores=$2
@@ -95,6 +97,9 @@ echo -n "Finding call-filter bams..."
 bams_filtered=$(ls "${workdirs}"/*/*/*/call-filter/*/execution/*.bam)
 echo " ✓"
 echo "Running align_stats()"
+
+echo "jobs: ${cores}"
+echo "cores sub: ${cores_sub}"
 
 #parallel --verbose --bar --jobs ${cores} align_stats {} {} "$idxstats" ${cores_sub} ::: $bams_unfiltered $bams_filtered #:::+ $bams_filtered
 #parallel --verbose --bar --jobs ${cores} align_stats {1} {2} "$idxstats" ${cores_sub} ::: $bams_unfiltered ::: $bams_filtered
