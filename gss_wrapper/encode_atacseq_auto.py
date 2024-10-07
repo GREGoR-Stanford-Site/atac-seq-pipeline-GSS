@@ -107,7 +107,7 @@ def get_fastq_GSS_IDs(demux_samplesheet_path):
 def generate_samplesheet(template_base_path, gss_id_work_dir, genomic_file_type, file_dict, samplesheet_title, samplesheet_description):
     template_path = template_base_path.format(genomic_file_type.lower()) 
     samplesheet_outpath = gss_id_work_dir+'/atac_samplesheet.json'
-    
+
     bam_data = None
     fastq_data = None    
 
@@ -134,12 +134,12 @@ def generate_samplesheet(template_base_path, gss_id_work_dir, genomic_file_type,
     if genomic_file_type.lower() == 'bam':
         bam_data = {"bam": f"{file_dict['bam_path']}"}
         data.update(bam_data)
-    
+
     else:
         fastq_data = {
-            "fastq_rep1_R1": f"{file_dict['fastq_r1_path']}",
-            "fastq_rep1_R2": f"{file_dict['fastq_r2_path']}"
-        }
+                "fastq_rep1_R1": f"{file_dict['fastq_r1_path']}",
+                "fastq_rep1_R2": f"{file_dict['fastq_r2_path']}"
+                }
         data.update(fastq_data)
 
     rendered_template = template.render(data)
@@ -152,8 +152,8 @@ def get_gss_atac_fastq_paths(fastqs_dir, gss_id):
     #TODO: improve filtering to remove possible edge cases (regex)
     fastqs = [item for item in os.listdir(fastqs_dir) if gss_id in item]
     fastqs = [item for item in fastqs if 'L00' not in item]
-    fastq_r1 = [item for item in fastqs if '_1.' in item][0]
-    fastq_r2 = [item for item in fastqs if '_2.' in item][0]
+    fastq_r1 = [item for item in fastqs if '_1.' in item or 'R1' in item][0]
+    fastq_r2 = [item for item in fastqs if '_2.' in item or 'R2' in item][0]
     fastq_r1_path = os.path.join(fastqs_dir, fastq_r1)
     fastq_r2_path = os.path.join(fastqs_dir, fastq_r2)
 
@@ -164,8 +164,8 @@ def get_gss_atac_paths(data_dir, gss_id, genomic_file_type):
     if genomic_file_type.lower() == 'fastq':
         fastqs = [item for item in os.listdir(data_dir) if gss_id in item and 'fastq' in item]
         fastqs = [item for item in fastqs if 'L00' not in item]
-        fastq_r1 = [item for item in fastqs if '_1.' in item][0]
-        fastq_r2 = [item for item in fastqs if '_2.' in item][0]
+        fastq_r1 = [item for item in fastqs if '_1.' in item or 'R1' in item][0]
+        fastq_r2 = [item for item in fastqs if '_2.' in item or 'R2' in item][0]
         fastq_r1_path = os.path.join(data_dir, fastq_r1)
         fastq_r2_path = os.path.join(data_dir, fastq_r2)
         file_dict['fastq_r2_path'] = fastq_r2_path 
@@ -202,17 +202,21 @@ def write_sbatch_script(gss_id, gss_id_work_dir, job_name, partition, atac_run_s
 #SBATCH --mem-per-cpu=6G
 
 
-. /home/jolsen98/micromamba/etc/profile.d/conda.sh 
-conda activate encode_env
+#. /home/jolsen98/micromamba/etc/profile.d/conda.sh 
+#conda activate encode_env
 
 cd {gss_id_work_dir}
 
 export SINGULARITY_BIND="/oak/stanford/groups/smontgom/jolsen98/atac-seq-pipeline-GSS/src:/mnt/src"
 
+#caper run atac.wdl -i {samplesheet_path} \
+#        --singularity https://encode-pipeline-singularity-image.s3.us-west-2.amazonaws.com/atac-seq-pipeline_v2.2.2.sif \
+#        --local-loc-dir ./local_loc_dir \
+#        --leader-job-name {job_name}
+
 caper run atac.wdl -i {samplesheet_path} \
         --singularity https://encode-pipeline-singularity-image.s3.us-west-2.amazonaws.com/atac-seq-pipeline_v2.2.2.sif \
-        --local-loc-dir ./local_loc_dir \
-        --leader-job-name {job_name}
+        --local-loc-dir ./local_loc_dir 
 
 python3 {atac_run_summary_script} --gss_id {gss_id} --run_summary_path {run_summary_path}
     """.format(gss_id_work_dir=gss_id_work_dir, samplesheet_path=samplesheet_path, job_name=job_name, partition=partition, gss_id=gss_id, run_summary_path=run_summary_path, atac_run_summary_script=atac_run_summary_script)
@@ -299,7 +303,7 @@ def main():
     print(f" ~ Running in {workdirs.split('/')[-1]}")
     if merged_bam_id:
         gss_ids = [merged_bam_id]
-    elif overwrite_ids:
+    elif overwrite_ids != [None]:
         gss_ids = overwrite_ids
     else:
         gss_ids = get_fastq_GSS_IDs(demux_samplesheet_path)
@@ -364,8 +368,8 @@ def main():
     for gss_id in gss_ids:
         i+=1
         #Debugging:
-#		if i == 3:
-#			break
+        #if i == 3:
+        #    break
 
         gss_id_work_dir = os.path.join(workdirs, gss_id)
 
@@ -378,7 +382,7 @@ def main():
         time.sleep(30) if i%10==0 else time.sleep(2)
 
         submissions_metadata[gss_id] = [f"\tjob_name: {job_name}", f"\tjob_id: {batch_job_id}", f"\tpartition: {partition}", f"\tdirectory: {gss_id_work_dir}"]
-  
+
     log_outpath = "./sbatch_submission_log.txt"
     write_submission_log_file(log_outpath, submissions_metadata)
 
