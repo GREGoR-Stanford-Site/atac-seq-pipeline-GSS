@@ -203,20 +203,18 @@ def write_sbatch_script(gss_id, gss_id_work_dir, job_name, partition, atac_run_s
 
 
 #. /home/jolsen98/micromamba/etc/profile.d/conda.sh 
-#conda activate encode_env
+micromamba activate caper 
 
 cd {gss_id_work_dir}
 
 export SINGULARITY_BIND="/oak/stanford/groups/smontgom/jolsen98/atac-seq-pipeline-GSS/src:/mnt/src"
 
-#caper run atac.wdl -i {samplesheet_path} \
-#        --singularity https://encode-pipeline-singularity-image.s3.us-west-2.amazonaws.com/atac-seq-pipeline_v2.2.2.sif \
-#        --local-loc-dir ./local_loc_dir \
-#        --leader-job-name {job_name}
-
 caper run atac.wdl -i {samplesheet_path} \
         --singularity https://encode-pipeline-singularity-image.s3.us-west-2.amazonaws.com/atac-seq-pipeline_v2.2.2.sif \
         --local-loc-dir ./local_loc_dir 
+#        --leader-job-name {job_name}
+
+#miniwdl run atac.wdl -i {samplesheet_path} 
 
 python3 {atac_run_summary_script} --gss_id {gss_id} --run_summary_path {run_summary_path}
     """.format(gss_id_work_dir=gss_id_work_dir, samplesheet_path=samplesheet_path, job_name=job_name, partition=partition, gss_id=gss_id, run_summary_path=run_summary_path, atac_run_summary_script=atac_run_summary_script)
