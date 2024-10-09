@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# To run: 'bash ./alignstats.sh <Directory> <Cores>'
+# To run: 'bash ./alignstats.sh <Directory> <number_parallel_processes> <number_cores_per_proccess>'
 
 # NOTE: Make sure you run this in an environment where mosdepth is installed
 
