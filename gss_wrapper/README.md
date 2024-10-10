@@ -93,7 +93,7 @@ GSS_RUN1_encode_atacseq
 - (OPTIONAL) Run `encode_to_count_matrix.sh` for peak merging. Read the top of the file for memory info
   > Used for downstream analysis (ie corroboration with RNASeq). Could get creative with QC.
   ```
-  bash ./encode_to_count_matrix.sh 4
+  ./encode_to_count_matrix.sh 4
   ```
 - Get all frag length distributions into one place.
   > flip through them in file viewer and make note of general pattern of NFR/mono-nuc/di-nuc densitites for given run (and major outliers)
