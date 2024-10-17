@@ -48,6 +48,7 @@ def parse_args():
     parser.add_argument('--full_overwrite', help='Pass argument with True to overwrite all samples in specified workdir', required=False, default=False, choices = ['True', 'False'])
     parser.add_argument('--overwrite_ids', help='Specific GSS IDs you would like to overwrite/rerun. Only these IDs will be run. Pass as GSS123456,GSS123457... [comma separated, no spaces]', required=False, default=[None])
     parser.add_argument('--merged_bam_id', help = 'Add this argument if running pipeline with single merged BAM. Provide unique identifer as argument that exists in the filename of the merged bam', required=False,default=None)
+    parser.add_argument('--batch', help = 'Batch number to add to slurm job name to help distinguish jobs from separate batches', required=True)
 
     args = parser.parse_args()
 
@@ -270,6 +271,7 @@ def main():
     args = parse_args()
     run_title = args.run_title
     workdirs = args.workdirs_path
+    batch_number = args.batch
     demux_samplesheet_path = args.demux_samplesheet_path
     data_dir = args.data_dir
     genomic_file_type = args.genomic_start_format
@@ -370,7 +372,7 @@ def main():
 
         gss_id_work_dir = os.path.join(workdirs, gss_id)
 
-        job_name = f"{gss_ids.index(gss_id)+1}_{len(gss_ids)}_atac_leader"
+        job_name = f"b{batch_number}_{gss_ids.index(gss_id)+1}_{len(gss_ids)}_atac_leader"
         partition = 'batch'
 
         write_sbatch_script(gss_id, gss_id_work_dir, job_name, partition, atac_run_summary_dir, atac_run_summary_script)
