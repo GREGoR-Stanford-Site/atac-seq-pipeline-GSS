@@ -149,23 +149,23 @@ def generate_samplesheet(template_base_path, gss_id_work_dir, genomic_file_type,
 
     return
 
-def get_gss_atac_fastq_paths(fastqs_dir, gss_id):
-    fastqs = [item for item in os.listdir(fastqs_dir) if gss_id in item]
-    fastqs = [item for item in fastqs if 'L00' not in item]
-    fastq_r1 = [item for item in fastqs if '_1' in item and item[15:] =='fastp.fastq.gz']
-    fastq_r2 = [item for item in fastqs if '_2' in item and item[15:] =='fastp.fastq.gz']
-    fastq_r1_path = os.path.join(fastqs_dir, fastq_r1)
-    fastq_r2_path = os.path.join(fastqs_dir, fastq_r2)
-
-    return fastq_r1_path, fastq_r2_path
+#def get_gss_atac_fastq_paths(fastqs_dir, gss_id):
+#    fastqs = [item for item in os.listdir(fastqs_dir) if gss_id in item]
+#    fastqs = [item for item in fastqs if 'L00' not in item]
+#    fastq_r1 = [item for item in fastqs if '_1' in item and item[15:] =='fastp.fastq.gz']
+#    fastq_r2 = [item for item in fastqs if '_2' in item and item[15:] =='fastp.fastq.gz']
+#    fastq_r1_path = os.path.join(fastqs_dir, fastq_r1)
+#    fastq_r2_path = os.path.join(fastqs_dir, fastq_r2)
+#
+#    return fastq_r1_path, fastq_r2_path
 
 def get_gss_atac_paths(data_dir, gss_id, genomic_file_type):
     file_dict = {'bam_path':None,'fastq_r1_path':None, 'fastq_r2_path':None}
     if genomic_file_type.lower() == 'fastq':
         fastqs = [item for item in os.listdir(data_dir) if gss_id in item and 'fastq' in item]
         fastqs = [item for item in fastqs if 'L00' not in item]
-        fastq_r1 = [item for item in fastqs if '_1.' in item or 'R1' in item][0]
-        fastq_r2 = [item for item in fastqs if '_2.' in item or 'R2' in item][0]
+        fastq_r1 = [item for item in fastqs if '_1' in item and item[-15:] =='.fastp.fastq.gz'][0]
+        fastq_r2 = [item for item in fastqs if '_2' in item and item[-15:] =='.fastp.fastq.gz'][0]
         fastq_r1_path = os.path.join(data_dir, fastq_r1)
         fastq_r2_path = os.path.join(data_dir, fastq_r2)
         file_dict['fastq_r2_path'] = fastq_r2_path 
