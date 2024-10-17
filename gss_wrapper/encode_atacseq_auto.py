@@ -149,11 +149,10 @@ def generate_samplesheet(template_base_path, gss_id_work_dir, genomic_file_type,
     return
 
 def get_gss_atac_fastq_paths(fastqs_dir, gss_id):
-    #TODO: improve filtering to remove possible edge cases (regex)
     fastqs = [item for item in os.listdir(fastqs_dir) if gss_id in item]
     fastqs = [item for item in fastqs if 'L00' not in item]
-    fastq_r1 = [item for item in fastqs if '_1.' in item or 'R1' in item][0]
-    fastq_r2 = [item for item in fastqs if '_2.' in item or 'R2' in item][0]
+    fastq_r1 = [item for item in fastqs if '_1' in item and item[15:] =='fastp.fastq.gz']
+    fastq_r2 = [item for item in fastqs if '_2' in item and item[15:] =='fastp.fastq.gz']
     fastq_r1_path = os.path.join(fastqs_dir, fastq_r1)
     fastq_r2_path = os.path.join(fastqs_dir, fastq_r2)
 
