@@ -42,7 +42,7 @@ def parse_args():
 
     parser.add_argument('--run_title', help = "Title/name for current run. Ie. 'GSS ATACSEQ BATCH 1'. Alphanumeric characters only" )
     parser.add_argument('--workdirs_path', help =  "Path to directory for work dirs for each sample. This is where all work and outputs will be stored.\nExample: './gss_atacseq_workdirs_MM_DD_YY'")
-    parser.add_argument('--demux_samplesheet_path', help='Path to samplesheet used in the demultiplex process.')
+    parser.add_argument('--demux_samplesheet_path', help='Path to samplesheet used in the demultiplex process. If starting from BAM format, pass "None"')
     parser.add_argument('--data_dir', help='Path to directory containing either 1) all fastqs outputted from demultiplex or 2)  a single raw bam file for each sample')
     parser.add_argument('--genomic_start_format', help = 'data type of files in data_dir, ie, fastq or bam.' ,required = True, default = False, choices = ['fastq','bam'])
     parser.add_argument('--full_overwrite', help='Pass argument with True to overwrite all samples in specified workdir', required=False, default=False, choices = ['True', 'False'])
@@ -59,7 +59,7 @@ def parse_args():
         print("Error, --run_title string must not contain special characters")
         raise Exception
 
-    if os.path.exists(args.demux_samplesheet_path) == False:
+    if eval(args.demux_samplesheet_path) != None and  os.path.exists(args.demux_samplesheet_path) == False:
         print(f"Error, demux_samplesheet_path: '{args.demux_samplesheet_path}' Does Not Exist")
         raise Exception
 
@@ -352,7 +352,6 @@ def main():
             print(f"No matching data file found for id {gss_id}, skipping")
             skip_ids.append(gss_id)
             continue
-        #fastq_r1_path, fastq_r2_path = get_gss_atac_fastq_paths(fastqs_dir, gss_id)
         generate_samplesheet(atac_samplesheet_template, gss_id_work_dir, genomic_file_type = genomic_file_type, file_dict = file_dict,  samplesheet_title = gss_id, samplesheet_description=run_title)
 
     gss_ids = [gss_id for gss_id in gss_ids if gss_id not in skip_ids]
