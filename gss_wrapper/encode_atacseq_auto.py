@@ -59,7 +59,7 @@ def parse_args():
         print("Error, --run_title string must not contain special characters")
         raise Exception
 
-    if eval(args.demux_samplesheet_path) != None and  os.path.exists(args.demux_samplesheet_path) == False:
+    if not args.demux_samplesheet_path or os.path.exists(args.demux_samplesheet_path) == False:
         print(f"Error, demux_samplesheet_path: '{args.demux_samplesheet_path}' Does Not Exist")
         raise Exception
 
@@ -195,15 +195,15 @@ def write_sbatch_script(gss_id, gss_id_work_dir, job_name, partition, atac_run_s
     sbatch_script = """#!/bin/bash
 #SBATCH --output={gss_id_work_dir}/slurm_%x.%j.out
 #SBATCH --job-name={job_name} 
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=1
 #SBATCH --partition={partition}
 #SBATCH --account=smontgom
-#SBATCH --time=72:00:00
-#SBATCH --mem-per-cpu=6G
+#SBATCH --time=96:00:00
+#SBATCH --mem-per-cpu=4G
 
 
 #. /home/jolsen98/micromamba/etc/profile.d/conda.sh 
-micromamba activate caper 
+#micromamba activate caper 
 
 cd {gss_id_work_dir}
 
@@ -365,13 +365,13 @@ def main():
     submissions_metadata = {gss_id:[] for gss_id in gss_ids}
     for gss_id in gss_ids:
         i+=1
-        #Debugging:
+        # Debugging:
         #if i == 3:
         #    break
 
         gss_id_work_dir = os.path.join(workdirs, gss_id)
 
-        job_name = f"b{batch_number}_{gss_ids.index(gss_id)+1}_{len(gss_ids)}_atac_leader"
+        job_name = f"{batch_number}_{gss_ids.index(gss_id)+1}_{len(gss_ids)}_atac_leader"
         partition = 'batch'
 
         write_sbatch_script(gss_id, gss_id_work_dir, job_name, partition, atac_run_summary_dir, atac_run_summary_script)
