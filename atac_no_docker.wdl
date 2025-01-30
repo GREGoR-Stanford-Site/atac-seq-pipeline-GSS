@@ -197,7 +197,7 @@ workflow atac {
         # group: resource_parameter
         Int align_cpu = 6
         Float align_mem_factor = 0.15
-        Int align_time_hr = 48
+        Int align_time_hr = 72
         Float align_disk_factor = 8.0
 
         Int filter_cpu = 4
